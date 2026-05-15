@@ -1,5 +1,5 @@
 # zebra_adrd
-ZeBRA Model for ADRD Screening
+ZeBRA Model for SISA Screening
 
 You can run ZeBRA using API call
 
