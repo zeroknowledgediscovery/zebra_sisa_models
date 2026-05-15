@@ -1,4 +1,3 @@
-# zebra_adrd
 ZeBRA Model for SISA Screening
 
 You can run ZeBRA using API call
