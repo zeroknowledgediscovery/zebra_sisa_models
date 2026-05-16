@@ -5,7 +5,7 @@ You can run ZeBRA using API call
 # `zebra-predict-sisa`
 
 
-### Single Patient Example
+### Example Run
 
 Specify `target` (`M2550`, `F2550`, `M5075`, or `F5075`) to run ZeBRA for different patient cohorts.
 
