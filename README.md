@@ -1,5 +1,7 @@
 ZeBRA Model for SISA Screening
 
+https://zeroknowledgediscovery.github.io/zebra_sisa_models/?utm_source=chatgpt.com
+
 You can run ZeBRA using API call
 
 # `zebra-predict-sisa`
