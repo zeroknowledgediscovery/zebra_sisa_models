@@ -285,6 +285,34 @@ body.read figure img{height:auto}
  body.read .api-run{font-size:15px}
 }
 
+
+/* ---------- λ-OR code-level signal appendix ---------- */
+.signal-head{margin-bottom:calc(var(--u)*11)}
+.signal-lede{font-size:calc(var(--u)*16);color:var(--navy);font-weight:900;margin:0 0 calc(var(--u)*10)}
+.signal-content{display:grid;grid-template-columns:52% minmax(0,1fr);align-items:stretch;gap:calc(var(--u)*24);flex:1;min-height:0}
+.signal-plot{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0}
+.signal-plot img{display:block;width:100%;height:100%;object-fit:contain}
+.signal-highlights{display:flex;flex-direction:column;gap:calc(var(--u)*12);min-width:0;min-height:0}
+.signal-highlight{background:var(--panel);border-radius:calc(var(--u)*8);padding:calc(var(--u)*17) calc(var(--u)*20);flex:1}
+.signal-highlight .countline{display:flex;align-items:baseline;gap:calc(var(--u)*10);font-size:calc(var(--u)*15.2);line-height:1.24;font-weight:900;color:var(--navy)}
+.signal-highlight .num{font-size:calc(var(--u)*37);line-height:1;color:var(--teal)}
+.signal-highlight p{font-size:calc(var(--u)*14.5);line-height:1.35;margin:calc(var(--u)*8) 0 0}
+.signal-takeaway{background:var(--navy);color:white;border-radius:calc(var(--u)*7);padding:calc(var(--u)*10) calc(var(--u)*18);margin-top:calc(var(--u)*11);font-size:calc(var(--u)*15);line-height:1.34}
+.signal-takeaway b{color:#68c9c1}
+.signal-source{font-size:calc(var(--u)*11.3);color:var(--muted);line-height:1.32;margin-top:calc(var(--u)*8)}
+@media(max-width:820px){
+ body.read .signal-head{margin-bottom:12px}
+ body.read .signal-lede{font-size:15px;margin-bottom:12px}
+ body.read .signal-content{display:flex;flex-direction:column;gap:16px}
+ body.read .signal-plot img{height:auto;max-height:480px}
+ body.read .signal-highlights{gap:10px}
+ body.read .signal-highlight{padding:15px}
+ body.read .signal-highlight .num{font-size:30px}
+ body.read .signal-highlight p{font-size:14px}
+ body.read .signal-takeaway{padding:12px 14px;font-size:14px}
+ body.read .signal-source{font-size:12px}
+}
+
 </style>
 </head>
 <body>
@@ -715,6 +743,33 @@ body.read figure img{height:auto}
     </div>
   </div>
   <aside class="notes"><p>The slide keeps the questions open-ended; say the resource question out loud in your own words, e.g. "Is this something your office could help sponsor, or connect to an existing funded initiative?"</p><p>Aim to leave with one concrete next step, for example: a follow-up with the relevant ambulatory, quality or population-health leaders; a two-page pilot concept her office can circulate; or an introduction to the RHTP behavioral-health team at KDPH.</p><p>Julie Cerel, PhD (already on board): Professor, UK College of Social Work; directs the Suicide Prevention &amp; Exposure Lab; licensed clinical psychologist; past president of the American Association of Suicidology; 2025 IASP Norman Farberow Award. She developed CODE RED universal safety planning, used in Kentucky middle and high schools through Garrett Lee Smith suicide-prevention work, which is a natural fit for the care-team response after a ZeBRA alert.</p></aside>
+</section>
+
+<!-- 15 ==================================================== -->
+<section class="slide" data-title="What drives the ZeBRA signal" data-kicker="Appendix · Code-level analysis">
+  <div class="kicker">Appendix · Code-level analysis</div>
+  <h2 class="signal-head">The signal is spread across many routine codes, not one red flag</h2>
+  <div class="body">
+    <p class="signal-lede">4,177 code tests across four sex–age groups</p>
+    <div class="signal-content">
+      <figure class="signal-plot">
+        <img src="assets/zebra_signal_lambda_or_volcano.png" alt="λ-OR volcano plot showing corrected log odds ratios versus negative log10 Wald p-values. Many diagnoses, medications, and procedure codes form a distributed association signal. Annotated examples include alcohol-related disorders, recurrent severe depression, sedative-hypnotic poisoning, altered mental status, chronic pain, and insomnia. The dashed line marks p = 0.05." loading="eager">
+      </figure>
+      <div class="signal-highlights">
+        <div class="signal-highlight">
+          <div class="countline"><span class="num">19</span><span>codes reach p &lt; 0.05 in all four groups</span></div>
+          <p>Alcohol-related disorders, recurrent depression, bipolar and psychotic disorders, antipsychotics, psychiatric evaluation, blood-alcohol testing, altered mental status, and emergency ambulance transport.</p>
+        </div>
+        <div class="signal-highlight">
+          <div class="countline"><span class="num">63</span><span>hits among non-psychiatric diagnoses</span></div>
+          <p>Sedative and benzodiazepine poisoning, chronic pain and headache, insomnia, head injury, convulsions, nausea and vomiting.</p>
+        </div>
+      </div>
+    </div>
+    <div class="signal-takeaway"><b>None of the individual codes survives multiple-testing correction</b> (4,177 tests; lowest FDR q = 0.27). The signal lies in their combination, which is what ZeBRA models.</div>
+    <p class="signal-source">Exploratory λ-OR associations (misclassification-corrected odds ratios, two-sided Wald tests); observational, not causal. Poisoning and toxicology codes may coincide with a crisis; parent and child codes overlap. Method: <a href="https://github.com/zeroknowledgediscovery/lambda_or" target="_blank" rel="noopener">github.com/zeroknowledgediscovery/lambda_or</a>.</p>
+  </div>
+  <aside class="notes"><p>The code-level λ-OR analysis of 4,177 tests across the four sex–age groups shows signals from many routine diagnoses, medications and procedures, not a single code. Nineteen codes meet nominal p &lt; 0.05 in all four groups; 63 non-psychiatric diagnoses show nominal associations. No individual code survives correction for multiple tests (minimum FDR q = 0.27). This is exploratory association, not causal inference, and some poisoning or toxicology codes may coincide with an acute crisis. The argument is for modeling combinations of coded history with ZeBRA, not triggering an alert from a particular code.</p></aside>
 </section>
 
 <!-- 15 ==================================================== -->
