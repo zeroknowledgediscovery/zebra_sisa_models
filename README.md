@@ -2,7 +2,10 @@ ZeBRA Model for SISA Screening
 
 https://zeroknowledgediscovery.github.io/zebra_sisa_models
 
-You can run ZeBRA using API call
+You can run ZeBRA using API call, or interactively from the web console:
+https://zeroknowledgediscovery.github.io/zebra_sisa_models/app/
+
+The console accepts a pasted JSON body, patient codes and dates entered in a form, or a plain-language history that an OpenAI model turns into the JSON before calling the API. Its source is in [`app/index.html`](app/index.html).
 
 # `zebra-predict-sisa`
 

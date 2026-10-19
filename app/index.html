@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZeBRA SISA Console</title>
+<meta name="description" content="Run the ZeBRA SISA risk model: paste JSON, enter codes and dates, or describe a patient in words and let an LLM build the request.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f6f8; --paper:#ffffff; --ink:#1b2433; --muted:#5d6878; --line:#d5dce3;
+  --accent:#137d7c; --accent-ink:#ffffff; --accent-soft:#dff0ee;
+  --warn:#9a5b00; --warn-soft:#fff3dc; --err:#b42318; --err-soft:#fde8e6; --ok:#0f6a3c; --ok-soft:#e2f4ea;
+  --code-bg:#0f1726; --code-ink:#d6e2f0;
+  --font:"Lato",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b1220; --paper:#121b2c; --ink:#e3e9f1; --muted:#97a3b4; --line:#26324a;
+    --accent:#2aa79f; --accent-ink:#06201f; --accent-soft:#143634;
+    --warn:#f0b357; --warn-soft:#3a2a0e; --err:#ff8a7d; --err-soft:#3d1713; --ok:#6fd49c; --ok-soft:#10301f;
+    --code-bg:#070c16; --code-ink:#d6e2f0;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b1220; --paper:#121b2c; --ink:#e3e9f1; --muted:#97a3b4; --line:#26324a;
+  --accent:#2aa79f; --accent-ink:#06201f; --accent-soft:#143634;
+  --warn:#f0b357; --warn-soft:#3a2a0e; --err:#ff8a7d; --err-soft:#3d1713; --ok:#6fd49c; --ok-soft:#10301f;
+  --code-bg:#070c16; --code-ink:#d6e2f0;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px 64px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 16px;margin-bottom:20px}
+h1{font-size:1.6rem;font-weight:900;margin:0;letter-spacing:-.01em}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);margin:4px 0 0;font-size:.95rem}
+h2{font-size:1.05rem;margin:0 0 12px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:-4px -4px 16px;padding:0 4px;overflow-x:auto}
+.tab{background:none;border:0;border-bottom:3px solid transparent;padding:10px 12px;cursor:pointer;color:var(--muted);font-weight:700;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.panel[hidden]{display:none}
+label{display:block;font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:4px}
+input[type=text],input[type=password],input[type=date],select,textarea{
+  width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-width:0}
+textarea{font-family:var(--mono);font-size:.82rem;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.grid{display:grid;gap:12px}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:700px){.g3,.g2{grid-template-columns:1fr}}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:7px 12px;cursor:pointer;font-weight:700;font-size:.9rem}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn:disabled{opacity:.55;cursor:progress}
+.btn.small{padding:4px 9px;font-size:.8rem}
+.hint{color:var(--muted);font-size:.83rem;margin:6px 0 0}
+.msg{border-radius:6px;padding:8px 12px;font-size:.88rem;margin-top:10px;white-space:pre-wrap}
+.msg.warn{background:var(--warn-soft);color:var(--warn)}
+.msg.err{background:var(--err-soft);color:var(--err)}
+.msg.ok{background:var(--ok-soft);color:var(--ok)}
+.msg:empty{display:none}
+.rec{margin-top:14px}
+.rec h3{font-size:.95rem;margin:0 0 6px;display:flex;justify-content:space-between;align-items:center}
+.rec table{width:100%;border-collapse:collapse}
+.rec td{padding:3px 4px 3px 0;vertical-align:top}
+.rec td:last-child{width:34px}
+.rec input{font-family:var(--mono);font-size:.82rem;padding:5px 8px}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--muted);font-size:.85rem;font-weight:700}
+pre{background:var(--code-bg);color:var(--code-ink);font-family:var(--mono);font-size:.78rem;border-radius:8px;padding:12px;overflow:auto;max-height:340px;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.results{width:100%;border-collapse:collapse;font-size:.9rem}
+.results th,.results td{text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+.results th{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.results td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tbl{overflow-x:auto}
+.pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:.78rem;font-weight:700}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.err{background:var(--err-soft);color:var(--err)}
+.stat{font-size:.85rem;color:var(--muted)}
+.theme{background:none;border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:.8rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1><span>ZeBRA</span> SISA console</h1>
+    <p class="sub">Build a patient record three ways, then call <code>zebra-predict-sisa</code>.</p>
+  </div>
+  <div class="row">
+    <a href="../">Briefing</a>
+    <a href="https://github.com/zeroknowledgediscovery/zebra_sisa_models#readme">README</a>
+    <button class="theme" id="themeBtn" type="button">Theme</button>
+  </div>
+</header>
+
+<section class="card">
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="json">1 · Paste JSON</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="codes">2 · Codes &amp; dates</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="words">3 · Describe in words (LLM)</button>
+  </div>
+
+  <!-- JSON -->
+  <div class="panel" data-panel="json">
+    <div class="row" style="margin-bottom:10px">
+      <span class="stat">Load sample:</span>
+      <button class="btn small" data-sample="M2550">M2550</button>
+      <button class="btn small" data-sample="F2550">F2550</button>
+      <button class="btn small" data-sample="M5075">M5075</button>
+      <button class="btn small" data-sample="F5075">F5075</button>
+      <button class="btn small" id="readmeEx">README example</button>
+      <label class="btn small" style="margin:0;color:inherit">Upload .json<input type="file" id="fileIn" accept=".json,application/json" hidden></label>
+      <button class="btn small" id="fmtBtn">Format</button>
+    </div>
+    <p class="hint" style="margin-top:0">The request body below is what gets sent. Edits from the other two tabs land here so you can review them first. Python-style single quotes are tolerated and converted.</p>
+  </div>
+
+  <!-- Codes -->
+  <div class="panel" data-panel="codes" hidden>
+    <div class="grid g3">
+      <div><label for="pId">Patient ID</label><input type="text" id="pId" value="1001"></div>
+      <div><label for="pDob">Birth date (MM-DD-YYYY)</label><input type="text" id="pDob" placeholder="01-01-1980"></div>
+      <div><label for="pSex">Sex</label><select id="pSex"><option>M</option><option>F</option></select></div>
+    </div>
+    <div class="rec" data-rec="DX_record"><h3>Diagnoses <span class="stat">ICD-10 / ICD-9</span></h3><table></table><div class="row"><button class="btn small" data-add>+ Row</button></div></div>
+    <div class="rec" data-rec="RX_record"><h3>Prescriptions <span class="stat">NDC (11-digit)</span></h3><table></table><div class="row"><button class="btn small" data-add>+ Row</button></div></div>
+    <div class="rec" data-rec="PROC_record"><h3>Procedures <span class="stat">CPT / HCPCS / ICD</span></h3><table></table><div class="row"><button class="btn small" data-add>+ Row</button></div></div>
+    <details>
+      <summary>Bulk paste codes and dates</summary>
+      <p class="hint">One entry per line: <code>TYPE, date, code</code> where TYPE is DX, RX or PROC. Dates may be MM-DD-YYYY, YYYY-MM-DD or MM/DD/YYYY. Lines without a TYPE are treated as DX.</p>
+      <textarea id="bulk" rows="6" placeholder="DX, 03-14-2021, F32.9&#10;DX, 2022-06-02, F41.1&#10;RX, 07/01/2021, 00093715653&#10;PROC, 03-14-2021, 90834"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn small" id="bulkBtn">Add to tables</button></div>
+    </details>
+    <div class="row" style="margin-top:14px">
+      <button class="btn primary" id="codesToJson">Build JSON</button>
+      <button class="btn" id="codesAppend">Append as another patient</button>
+      <button class="btn" id="jsonToCodes">Load first patient from JSON</button>
+    </div>
+    <div class="msg" id="codesMsg"></div>
+  </div>
+
+  <!-- Words -->
+  <div class="panel" data-panel="words" hidden>
+    <div class="grid g2">
+      <div><label for="oaKey">OpenAI API key</label><input type="password" id="oaKey" placeholder="sk-…" autocomplete="off"></div>
+      <div><label for="oaModel">Model</label><input type="text" id="oaModel" value="gpt-4.1-mini"></div>
+    </div>
+    <div class="row" style="margin-top:6px"><label style="margin:0;display:flex;gap:6px;align-items:center;font-weight:400"><input type="checkbox" id="oaRemember"> Remember key in this browser</label></div>
+    <div style="margin-top:12px">
+      <label for="words">Clinical history in plain language</label>
+      <textarea id="words" rows="7" style="font-family:var(--font);font-size:.95rem" placeholder="e.g. 34-year-old woman. Diagnosed with major depression in March 2021, generalized anxiety in mid 2022, alcohol use disorder late 2022. Started sertraline in 2021, switched to bupropion in 2023. Weekly psychotherapy through 2022, ED visit for self-inflicted laceration Jan 2024."></textarea>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="inferBtn">Infer JSON</button>
+      <label style="margin:0;display:flex;gap:6px;align-items:center;font-weight:400"><input type="checkbox" id="autoRun"> Run the model right after</label>
+    </div>
+    <p class="hint">The description is sent to OpenAI from your browser. Codes are generated by the LLM; review them in the JSON tab before relying on the result. Do not enter identifiable patient information.</p>
+    <div class="msg" id="wordsMsg"></div>
+    <details id="llmNotes" hidden><summary>LLM notes and assumptions</summary><pre id="llmNotesTxt"></pre></details>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Request</h2>
+  <div class="grid g3">
+    <div><label for="target">Target cohort</label>
+      <select id="target"><option>M2550</option><option>F2550</option><option>M5075</option><option>F5075</option></select></div>
+    <div><label for="zKey">ZeBRA API key</label><input type="text" id="zKey" value="63d87942b4a2d61985a377db05a35e73"></div>
+    <div><label for="endpoint">Endpoint</label><input type="text" id="endpoint" value="https://us-central1-pkcsaas-01.cloudfunctions.net/zebra-predict-sisa"></div>
+  </div>
+  <div style="margin-top:12px">
+    <label for="body">Request body (JSON list of patient records)</label>
+    <textarea id="body" rows="14" spellcheck="false"></textarea>
+  </div>
+  <div class="msg" id="checkMsg"></div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn primary" id="runBtn">Run ZeBRA</button>
+    <button class="btn" id="checkBtn">Validate</button>
+    <button class="btn" id="suggestBtn">Suggest target</button>
+    <button class="btn" id="curlBtn">Copy as curl</button>
+  </div>
+</section>
+
+<section class="card" id="resCard" hidden>
+  <h2>Response <span class="stat" id="resMeta"></span></h2>
+  <div class="msg" id="runMsg"></div>
+  <div class="tbl" id="resTable"></div>
+  <details open><summary>Raw response</summary><pre id="resRaw"></pre></details>
+</section>
+</div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch { return null; } },
+  set(k,v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k,v); } catch {} }
+};
+const TARGETS = ["M2550","F2550","M5075","F5075"];
+const README_EXAMPLE = [{
+  patient_id: 33443873802, birth_date: "01-01-2006", sex: "F",
+  DX_record: [{date:"07-31-2006",code:"Z38.00"},{date:"08-07-2006",code:"Z00.129"},{date:"08-07-2006",code:"P59.9"},{date:"08-29-2016",code:"J01.90"}],
+  RX_record: [{date:"10-29-2011",code:"61168010101"},{date:"05-16-2015",code:"00071439703"},{date:"08-08-2015",code:"00005501523"}],
+  PROC_record: [{date:"02-05-2007",code:"90723"},{date:"11-05-2007",code:"J1100"},{date:"11-05-2007",code:"99214"}]
+}];
+
+/* ---------- theme ---------- */
+(function(){
+  const t = store.get("zebra-theme"); if (t) document.documentElement.dataset.theme = t;
+  $("#themeBtn").onclick = () => {
+    const cur = document.documentElement.dataset.theme ||
+      (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    const next = cur === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next; store.set("zebra-theme", next);
+  };
+})();
+
+/* ---------- tabs ---------- */
+$$(".tab").forEach(b => b.onclick = () => {
+  $$(".tab").forEach(x => x.setAttribute("aria-selected", x === b));
+  $$(".panel").forEach(p => p.hidden = p.dataset.panel !== b.dataset.tab);
+  store.set("zebra-tab", b.dataset.tab);
+});
+{ const t = store.get("zebra-tab"); const b = t && $(`.tab[data-tab="${t}"]`); if (b) b.click(); }
+
+/* ---------- helpers ---------- */
+function msg(el, text, kind){ el.className = "msg" + (kind ? " " + kind : ""); el.textContent = text || ""; }
+
+function normDate(s){
+  s = String(s || "").trim();
+  let m;
+  if ((m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/))) return `${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}-${m[1]}`;
+  if ((m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/))) return `${m[1].padStart(2,"0")}-${m[2].padStart(2,"0")}-${m[3]}`;
+  return s;
+}
+function parseDate(s){
+  const m = String(s).match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (!m) return null;
+  const d = new Date(+m[3], +m[1] - 1, +m[2]);
+  return d.getMonth() === +m[1] - 1 ? d : null;
+}
+function lenientParse(text){
+  try { return JSON.parse(text); } catch (e) {
+    // accept the README's python-style example: single quotes, trailing commas
+    const fixed = text.replace(/'/g, '"').replace(/,\s*([\]}])/g, "$1")
+      .replace(/\bTrue\b/g,"true").replace(/\bFalse\b/g,"false").replace(/\bNone\b/g,"null");
+    return JSON.parse(fixed);
+  }
+}
+function getBody(){
+  let data = lenientParse($("#body").value);
+  if (!Array.isArray(data)) data = data && Array.isArray(data.patients) ? data.patients : [data];
+  return data;
+}
+function setBody(data){ $("#body").value = JSON.stringify(data, null, 2); validate(true); }
+
+/* ---------- validation ---------- */
+function ageAt(dob, at){ return (at - dob) / (365.2425 * 864e5); }
+function lastDate(p){
+  const ds = ["DX_record","RX_record","PROC_record"].flatMap(k => (p[k] || []).map(r => parseDate(r.date))).filter(Boolean);
+  return ds.length ? new Date(Math.max(...ds)) : new Date();
+}
+function suggestTarget(p){
+  if (!/^[MF]$/.test(p.sex)) return null;
+  // an explicit age field wins (the sample files carry a placeholder birth_date)
+  const dob = parseDate(p.birth_date);
+  const a = typeof p.age === "number" ? p.age : dob ? ageAt(dob, lastDate(p)) : null;
+  if (a == null) return null;
+  return p.sex + (a < 50 ? "2550" : "5075");
+}
+function validate(quiet){
+  const el = $("#checkMsg");
+  let data;
+  try { data = getBody(); } catch (e) { msg(el, "Body is not valid JSON: " + e.message, "err"); return null; }
+  const errs = [], warns = [];
+  const target = $("#target").value;
+  data.forEach((p, i) => {
+    const tag = `Patient ${p.patient_id ?? "#" + (i + 1)}`;
+    if (p.patient_id == null) errs.push(`${tag}: missing patient_id`);
+    if (!parseDate(p.birth_date)) errs.push(`${tag}: birth_date must be MM-DD-YYYY`);
+    if (!/^[MF]$/.test(p.sex)) errs.push(`${tag}: sex must be "M" or "F"`);
+    for (const k of ["DX_record","RX_record","PROC_record"]) {
+      if (p[k] == null) { warns.push(`${tag}: no ${k}`); continue; }
+      if (!Array.isArray(p[k])) { errs.push(`${tag}: ${k} must be a list`); continue; }
+      const bad = p[k].filter(r => !parseDate(r.date) || !r.code);
+      if (bad.length) errs.push(`${tag}: ${bad.length} ${k} entr${bad.length > 1 ? "ies" : "y"} with bad date or empty code`);
+    }
+    const dx = (p.DX_record || []).map(r => parseDate(r.date)).filter(Boolean);
+    if (dx.length) {
+      const span = (Math.max(...dx) - Math.min(...dx)) / 864e5;
+      if (span < 365) warns.push(`${tag}: DX history spans ${Math.round(span)} days; the model needs at least 1 year and will skip this record`);
+    }
+    const s = suggestTarget(p);
+    if (s && s !== target) warns.push(`${tag}: looks like cohort ${s}, but target is ${target}`);
+  });
+  if (errs.length) msg(el, errs.join("\n"), "err");
+  else if (warns.length) msg(el, warns.join("\n"), "warn");
+  else msg(el, quiet ? "" : `${data.length} record${data.length > 1 ? "s" : ""} look valid for ${target}.`, quiet ? "" : "ok");
+  return errs.length ? null : data;
+}
+$("#checkBtn").onclick = () => validate(false);
+$("#target").onchange = () => validate(true);
+$("#body").addEventListener("change", () => validate(true));
+$("#suggestBtn").onclick = () => {
+  let data; try { data = getBody(); } catch (e) { return msg($("#checkMsg"), e.message, "err"); }
+  const s = data.map(suggestTarget).filter(Boolean);
+  if (!s.length) return msg($("#checkMsg"), "Need birth_date and sex to suggest a cohort.", "warn");
+  const top = s.sort((a,b) => s.filter(x=>x===b).length - s.filter(x=>x===a).length)[0];
+  $("#target").value = top; validate(false);
+};
+
+/* ---------- JSON tab ---------- */
+$$("[data-sample]").forEach(b => b.onclick = async () => {
+  const t = b.dataset.sample;
+  try {
+    const r = await fetch(`../SAMPLE_INPUT/${t}.json`);
+    if (!r.ok) throw new Error(r.status + " " + r.statusText);
+    $("#target").value = t; setBody(await r.json());
+  } catch (e) {
+    try {
+      const r = await fetch(`https://raw.githubusercontent.com/zeroknowledgediscovery/zebra_sisa_models/main/SAMPLE_INPUT/${t}.json`);
+      $("#target").value = t; setBody(await r.json());
+    } catch { msg($("#checkMsg"), "Could not load sample: " + e.message, "err"); }
+  }
+});
+$("#readmeEx").onclick = () => { $("#target").value = "F2550"; setBody(README_EXAMPLE); };
+$("#fmtBtn").onclick = () => { try { setBody(getBody()); } catch (e) { msg($("#checkMsg"), e.message, "err"); } };
+$("#fileIn").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  $("#body").value = await f.text(); e.target.value = "";
+  try { setBody(getBody()); } catch { validate(false); }
+};
+
+/* ---------- Codes tab ---------- */
+function addRow(kind, date = "", code = ""){
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td><input type="text" placeholder="MM-DD-YYYY" class="d"></td><td><input type="text" placeholder="code" class="c"></td><td><button class="btn small" title="Remove" aria-label="Remove row">×</button></td>`;
+  $(".d", tr).value = date; $(".c", tr).value = code;
+  $("button", tr).onclick = () => tr.remove();
+  $(`[data-rec="${kind}"] table`).appendChild(tr);
+}
+$$("[data-rec]").forEach(sec => $("[data-add]", sec).onclick = () => addRow(sec.dataset.rec));
+function clearRows(){ $$("[data-rec] table").forEach(t => t.innerHTML = ""); }
+function codesPatient(){
+  const p = {
+    patient_id: /^\d+$/.test($("#pId").value.trim()) ? Number($("#pId").value.trim()) : $("#pId").value.trim(),
+    birth_date: normDate($("#pDob").value), sex: $("#pSex").value
+  };
+  $$("[data-rec]").forEach(sec => {
+    p[sec.dataset.rec] = $$("tr", sec).map(tr => ({ date: normDate($(".d", tr).value), code: $(".c", tr).value.trim() }))
+      .filter(r => r.date || r.code).sort((a,b) => (parseDate(a.date)||0) - (parseDate(b.date)||0));
+  });
+  return p;
+}
+$("#codesToJson").onclick = () => {
+  const p = codesPatient(); setBody([p]);
+  const s = suggestTarget(p); if (s) $("#target").value = s;
+  validate(false); msg($("#codesMsg"), "Request body updated." + (s ? ` Target set to ${s}.` : ""), "ok");
+};
+$("#codesAppend").onclick = () => {
+  let data = []; try { data = getBody(); } catch {}
+  data.push(codesPatient()); setBody(data);
+  msg($("#codesMsg"), `Request body now has ${data.length} patients.`, "ok");
+};
+$("#jsonToCodes").onclick = () => {
+  let p; try { p = getBody()[0]; } catch (e) { return msg($("#codesMsg"), e.message, "err"); }
+  if (!p) return msg($("#codesMsg"), "Request body is empty.", "warn");
+  $("#pId").value = p.patient_id ?? ""; $("#pDob").value = p.birth_date ?? ""; $("#pSex").value = p.sex === "F" ? "F" : "M";
+  clearRows();
+  for (const k of ["DX_record","RX_record","PROC_record"]) (p[k] || []).forEach(r => addRow(k, r.date, r.code));
+  msg($("#codesMsg"), "Loaded.", "ok");
+};
+$("#bulkBtn").onclick = () => {
+  const map = { DX:"DX_record", RX:"RX_record", PROC:"PROC_record", PX:"PROC_record", CPT:"PROC_record", NDC:"RX_record", ICD:"DX_record" };
+  let n = 0, skipped = 0;
+  $("#bulk").value.split(/\r?\n/).forEach(line => {
+    const parts = line.split(/[,\t;]+|\s{2,}/).map(s => s.trim()).filter(Boolean);
+    if (!parts.length) return;
+    let kind = "DX_record";
+    if (map[parts[0].toUpperCase()]) kind = map[parts.shift().toUpperCase()];
+    if (parts.length < 2) { skipped++; return; }
+    let [a, b] = parts;
+    if (!/\d{1,4}[-\/.]\d{1,2}[-\/.]\d{1,4}/.test(a)) [a, b] = [b, a]; // allow "code, date"
+    addRow(kind, normDate(a), b); n++;
+  });
+  msg($("#codesMsg"), `Added ${n} rows` + (skipped ? `, skipped ${skipped} unparseable lines` : "") + ".", skipped ? "warn" : "ok");
+};
+addRow("DX_record"); addRow("RX_record"); addRow("PROC_record");
+
+/* ---------- Words tab (OpenAI) ---------- */
+{ const k = store.get("zebra-oa-key"); if (k) { $("#oaKey").value = k; $("#oaRemember").checked = true; }
+  const m = store.get("zebra-oa-model"); if (m) $("#oaModel").value = m; }
+$("#oaRemember").onchange = () => store.set("zebra-oa-key", $("#oaRemember").checked ? $("#oaKey").value : null);
+$("#oaKey").onchange = () => { if ($("#oaRemember").checked) store.set("zebra-oa-key", $("#oaKey").value); };
+$("#oaModel").onchange = () => store.set("zebra-oa-model", $("#oaModel").value);
+
+const SYSTEM_PROMPT = `You convert a plain-language clinical history into input for the ZeBRA SISA suicide-risk model.
+Return ONLY a JSON object of this shape:
+{
+  "target": "M2550" | "F2550" | "M5075" | "F5075",
+  "patients": [ {
+    "patient_id": <integer>,
+    "birth_date": "MM-DD-YYYY",
+    "sex": "M" | "F",
+    "DX_record":   [ {"date": "MM-DD-YYYY", "code": "<ICD-10-CM code with dot, e.g. F32.9>"} ],
+    "RX_record":   [ {"date": "MM-DD-YYYY", "code": "<11-digit NDC without dashes, e.g. 00093715653>"} ],
+    "PROC_record": [ {"date": "MM-DD-YYYY", "code": "<CPT or HCPCS code, e.g. 90834>"} ]
+  } ],
+  "notes": "<short list of assumptions you made>"
+}
+Rules:
+- One patient per person described; patient_ids start at 1001 unless given.
+- If only age is given, set birth_date to 01-01 of the implied birth year relative to the most recent event (or today, ${new Date().toISOString().slice(0,10)}, if no dates).
+- Use real, valid, commonly billed codes. Prefer specific ICD-10-CM codes that match the described condition. Use real NDCs for the generic drug described.
+- Resolve vague timing ("mid 2022", "last spring") to a concrete plausible date. Repeat chronic diagnoses at follow-up visits and repeat prescriptions at refill intervals (about every 30-90 days) when the text implies ongoing care, add routine visit procedure codes (e.g. 99213/99214) on diagnosis dates.
+- The DX_record must span at least 1 year between the earliest and latest diagnosis date; if the description is shorter, add plausible routine follow-up diagnosis entries and say so in notes.
+- target: sex letter + "2550" if age at the most recent event is under 50, else "5075". Ages outside 25-75 map to the nearest cohort; mention that in notes.
+- Sort each record list by date. Do not invent major conditions that were not described.`;
+
+async function inferJson(){
+  const key = $("#oaKey").value.trim(), text = $("#words").value.trim(), el = $("#wordsMsg");
+  if (!key) return msg(el, "Enter an OpenAI API key.", "err");
+  if (!text) return msg(el, "Describe the patient history first.", "err");
+  const btn = $("#inferBtn"); btn.disabled = true; msg(el, "Asking " + $("#oaModel").value + "…");
+  try {
+    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
+      body: JSON.stringify({
+        model: $("#oaModel").value.trim(),
+        response_format: { type: "json_object" },
+        messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: text }]
+      })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error?.message || r.status + " " + r.statusText);
+    const out = JSON.parse(j.choices[0].message.content);
+    const patients = Array.isArray(out) ? out : out.patients || [out];
+    setBody(patients);
+    const t = TARGETS.includes(out.target) ? out.target : suggestTarget(patients[0]);
+    if (t) $("#target").value = t;
+    validate(true);
+    $("#llmNotes").hidden = !out.notes; $("#llmNotesTxt").textContent = Array.isArray(out.notes) ? out.notes.join("\n") : (out.notes || "");
+    const counts = patients.map(p => `${(p.DX_record||[]).length} DX, ${(p.RX_record||[]).length} RX, ${(p.PROC_record||[]).length} PROC`).join("; ");
+    msg(el, `Built ${patients.length} record${patients.length > 1 ? "s" : ""} (${counts}), target ${t}. Review the request body below.`, "ok");
+    if ($("#autoRun").checked) runModel();
+  } catch (e) {
+    msg(el, "LLM call failed: " + e.message, "err");
+  } finally { btn.disabled = false; }
+}
+$("#inferBtn").onclick = inferJson;
+
+/* ---------- Run ---------- */
+function requestUrl(){
+  const u = new URL($("#endpoint").value.trim());
+  u.searchParams.set("target", $("#target").value);
+  u.searchParams.set("api_key", $("#zKey").value.trim());
+  return u.toString();
+}
+function curlCmd(){
+  let body; try { body = JSON.stringify(getBody()); } catch { body = $("#body").value; }
+  return `curl -X POST -H "Content-Type: application/json" -d '${body.replace(/'/g, "'\\''")}' "${requestUrl()}"`;
+}
+$("#curlBtn").onclick = async () => {
+  const c = curlCmd();
+  try { await navigator.clipboard.writeText(c); msg($("#checkMsg"), "curl command copied to clipboard.", "ok"); }
+  catch { $("#resCard").hidden = false; $("#resRaw").textContent = c; msg($("#runMsg"), "Clipboard unavailable; curl command shown below.", "warn"); }
+};
+function fmt(v, d = 4){ return typeof v === "number" ? v.toFixed(d) : (v ?? ""); }
+function renderResults(data){
+  const rows = Array.isArray(data) ? data : [data];
+  if (!rows.length || typeof rows[0] !== "object") { $("#resTable").innerHTML = ""; return; }
+  const known = ["patient_id","predicted_risk","probability","error_code"];
+  const extra = [...new Set(rows.flatMap(Object.keys))].filter(k => !known.includes(k));
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  let h = `<table class="results"><thead><tr><th>Patient</th><th>Predicted risk</th><th>Probability</th><th>Status</th>${extra.map(k=>`<th>${esc(k)}</th>`).join("")}</tr></thead><tbody>`;
+  for (const r of rows) {
+    const st = r.error_code ? `<span class="pill err">${esc(r.error_code)}</span>` : `<span class="pill ok">ok</span>`;
+    h += `<tr><td class="num">${esc(r.patient_id ?? "")}</td><td class="num">${esc(fmt(r.predicted_risk, 5))}</td><td class="num">${esc(fmt(r.probability))}</td><td>${st}</td>${extra.map(k=>`<td class="num">${esc(typeof r[k]==="object"?JSON.stringify(r[k]):fmt(r[k]))}</td>`).join("")}</tr>`;
+  }
+  $("#resTable").innerHTML = h + "</tbody></table>";
+}
+async function runModel(){
+  const data = validate(true);
+  if (!data) { $("#checkMsg").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+  const btn = $("#runBtn"); btn.disabled = true;
+  $("#resCard").hidden = false; $("#resTable").innerHTML = ""; $("#resRaw").textContent = "";
+  msg($("#runMsg"), `Calling ${$("#target").value} with ${data.length} record${data.length > 1 ? "s" : ""}…`);
+  const t0 = performance.now();
+  try {
+    const r = await fetch(requestUrl(), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+    const text = await r.text();
+    $("#resMeta").textContent = `HTTP ${r.status} · ${((performance.now() - t0) / 1000).toFixed(1)} s`;
+    let out; try { out = lenientParse(text); } catch { out = null; }
+    $("#resRaw").textContent = out ? JSON.stringify(out, null, 2) : text;
+    if (!r.ok) throw new Error(`HTTP ${r.status}: ${text.slice(0, 300)}`);
+    if (out) renderResults(out);
+    msg($("#runMsg"), "", "");
+  } catch (e) {
+    const cors = e instanceof TypeError;
+    msg($("#runMsg"), cors
+      ? "The browser could not reach the endpoint (network error or the endpoint does not allow cross-origin requests from this page). Use “Copy as curl” to run the same request from a terminal.\n" + e.message
+      : e.message, "err");
+    if (cors) $("#resRaw").textContent = curlCmd();
+  } finally { btn.disabled = false; }
+}
+$("#runBtn").onclick = runModel;
+
+setBody(README_EXAMPLE); $("#target").value = "F2550"; validate(true);
+</script>
+</body>
+</html>
