@@ -87,6 +87,8 @@ pre{background:var(--code-bg);color:var(--code-ink);font-family:var(--mono);font
 .pill.ok{background:var(--ok-soft);color:var(--ok)}
 .pill.err{background:var(--err-soft);color:var(--err)}
 .stat{font-size:.85rem;color:var(--muted)}
+body.embedded header{display:none}
+body.embedded .wrap{padding-top:12px}
 .theme{background:none;border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:.8rem;color:var(--muted)}
 </style>
 </head>
@@ -98,8 +100,8 @@ pre{background:var(--code-bg);color:var(--code-ink);font-family:var(--mono);font
     <p class="sub">Build a patient record three ways, then call <code>zebra-predict-sisa</code>.</p>
   </div>
   <div class="row">
-    <a href="../">Briefing</a>
-    <a href="https://github.com/zeroknowledgediscovery/zebra_sisa_models#readme">README</a>
+    <a href="../" target="_top">Briefing</a>
+    <a href="https://github.com/zeroknowledgediscovery/zebra_sisa_models#readme" target="_blank" rel="noopener">README</a>
     <button class="theme" id="themeBtn" type="button">Theme</button>
   </div>
 </header>
@@ -214,6 +216,9 @@ const README_EXAMPLE = [{
   RX_record: [{date:"10-29-2011",code:"61168010101"},{date:"05-16-2015",code:"00071439703"},{date:"08-08-2015",code:"00005501523"}],
   PROC_record: [{date:"02-05-2007",code:"90723"},{date:"11-05-2007",code:"J1100"},{date:"11-05-2007",code:"99214"}]
 }];
+
+// inside the briefing deck the slide already supplies the title
+if (window.self !== window.top) document.body.classList.add("embedded");
 
 /* ---------- theme ---------- */
 (function(){

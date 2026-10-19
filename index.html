@@ -252,6 +252,11 @@ body.read figure img{height:auto}
 @media (prefers-reduced-motion:reduce){.slide.active{animation:none}.progress{transition:none}}
 
 /* ---------- Interactive public API demonstration ---------- */
+.api-embed-bar{display:flex;align-items:center;justify-content:space-between;gap:calc(var(--u)*14);background:#e9f3f3;color:var(--teal-ink);border:1px solid #d4e8e6;padding:calc(var(--u)*10) calc(var(--u)*16);border-radius:calc(var(--u)*8);font-size:calc(var(--u)*14);font-weight:700;margin-bottom:calc(var(--u)*12)}
+.api-embed-bar a{white-space:nowrap;font-weight:900}
+.api-embed{flex:1;min-height:0;width:100%;border:1px solid var(--line);border-radius:calc(var(--u)*8);background:#fff}
+ body.read .api-embed{height:80vh;flex:none}
+ body.read .api-embed-bar{flex-wrap:wrap}
 .api-slide h2{margin-bottom:calc(var(--u)*15)}
 .api-strip{display:flex;align-items:center;justify-content:space-around;gap:calc(var(--u)*14);background:#e9f3f3;color:var(--teal-ink);border:1px solid #d4e8e6;padding:calc(var(--u)*13) calc(var(--u)*20);border-radius:calc(var(--u)*8);font-size:calc(var(--u)*16);font-weight:900;margin-bottom:calc(var(--u)*16)}
 .api-strip .api-arr{font-size:calc(var(--u)*24);color:var(--teal)}
@@ -907,58 +912,13 @@ body.read figure img{height:auto}
   <div class="kicker">Appendix · Live API</div>
   <h2>From structured EHR records to risk scores — live API</h2>
   <div class="body">
-    <div class="api-strip" aria-label="Live API pipeline">
-      <span>Diagnoses · Medications · Procedures</span>
-      <span class="api-arr" aria-hidden="true">→</span>
-      <span>POST /zebra-predict-sisa</span>
-      <span class="api-arr" aria-hidden="true">→</span>
-      <span>Patient-level risk score</span>
+    <div class="api-embed-bar">
+      <span>Paste JSON · enter codes and dates · or describe a history in words and let an LLM build the request</span>
+      <a href="app/" target="_blank" rel="noopener">Open full screen ↗</a>
     </div>
-    <div class="api-demo-layout">
-      <div class="api-pane">
-        <h3>1. Send a synthetic patient record</h3>
-        <div class="api-fieldrow">
-          <label><span class="api-fieldlabel">Sex / age model</span>
-            <select id="zebraApiCohort" class="api-control">
-              <option value="M2550">M2550 · Male 25–50</option>
-              <option value="F2550">F2550 · Female 25–50</option>
-              <option value="M5075">M5075 · Male 50–75</option>
-              <option value="F5075">F5075 · Female 50–75</option>
-            </select>
-          </label>
-          <label><span class="api-fieldlabel">API key (from README)</span>
-            <input id="zebraApiKey" class="api-control" type="password" autocomplete="off" spellcheck="false" placeholder="Paste key for live request" aria-label="ZeBRA API key">
-          </label>
-        </div>
-        <div class="api-actions">
-          <button id="zebraApiRun" class="api-run" type="button">Run live inference ↗</button>
-          <span class="api-demo-label">No real patient data</span>
-        </div>
-        <div class="api-demo-label">Example JSON request · one fabricated patient, &gt;1 year diagnosis history</div>
-        <pre id="zebraApiPayload" class="api-code" aria-label="Synthetic JSON request"></pre>
-        <p class="api-caution">Public demo uses fabricated records only. API key is used for the request and is not stored by this page.</p>
-      </div>
-      <div class="api-pane outpane">
-        <h3>2. Receive a model-generated risk score</h3>
-        <div class="api-demo-label" id="zebraApiResultLabel" style="color:#a9c9ce">Illustrative response documented in README (not a live call)</div>
-        <pre id="zebraApiResponse" class="api-code api-result" aria-live="polite">[
-  {
-    "patient_id": 33443873802,
-    "predicted_risk": 0.00353191883909529,
-    "error_code": "",
-    "probability": 0.9696941114273572
-  }
-]</pre>
-        <div id="zebraApiStatus" class="api-status" role="status">To perform an actual prediction, paste the documented API key and select “Run live inference.”</div>
-        <p class="api-out-hint">Response fields: <b>predicted_risk</b>, <b>probability</b>, <b>error_code</b>, and <b>patient_id</b>. The model requires at least one year between the earliest and latest diagnosis dates.</p>
-        <div class="api-bottom">
-          <a href="https://github.com/zeroknowledgediscovery/zebra_sisa_models#example-run" target="_blank" rel="noopener">API documentation ↗</a>
-          <a href="https://github.com/zeroknowledgediscovery/zebra_sisa_models/tree/main/SAMPLE_INPUT" target="_blank" rel="noopener">Sample JSON payloads ↗</a>
-        </div>
-      </div>
-    </div>
+    <iframe class="api-embed" src="app/" title="ZeBRA SISA console" loading="lazy"></iframe>
   </div>
-  <aside class="notes"><p>This is the actual deployed Cloud Functions API documented in the public repository. Select one of the four sex–age cohorts, paste the key from the README and click Run live inference. The request is a JSON array of fabricated patient records with dated diagnoses, NDC medications and procedure codes. The endpoint returns patient_id, predicted_risk, probability and error_code. The example visible before the call is reproduced from the README and is not the synthetic patient's result. A browser might block requests because of the API's CORS settings; if that occurs, use the README curl command from a terminal instead. Do not submit identifiable patient data from this public slide. A predicted risk is not by itself a clinical action recommendation.</p></aside>
+  <aside class="notes"><p>This is the live ZeBRA SISA console, calling the actual deployed Cloud Functions API documented in the public repository. Three ways to build a request: paste or load a JSON body (the four cohort samples are one click away), type diagnosis, prescription and procedure codes with dates, or describe a patient history in plain language and let an OpenAI model infer the JSON. Pick the sex–age cohort and click Run ZeBRA; the response shows predicted_risk, probability and error_code per patient. Use fabricated records only.</p></aside>
 </section>
 
 </div>
@@ -1138,95 +1098,6 @@ body.read figure img{height:auto}
   if (store.get('zebra-notes') === '1') toggleNotes(true);
   applyMode();
   go(cur, {instant: true});
-})();
-</script>
-
-<script>
-(() => {
-  const cohort = document.getElementById('zebraApiCohort');
-  const key = document.getElementById('zebraApiKey');
-  const go = document.getElementById('zebraApiRun');
-  const payloadPreview = document.getElementById('zebraApiPayload');
-  const response = document.getElementById('zebraApiResponse');
-  const label = document.getElementById('zebraApiResultLabel');
-  const status = document.getElementById('zebraApiStatus');
-  const endpoint = 'https://us-central1-pkcsaas-01.cloudfunctions.net/zebra-predict-sisa';
-  const cohorts = {
-    M2550: { sex: 'M', birth_date: '01-01-1990' },
-    F2550: { sex: 'F', birth_date: '01-01-1990' },
-    M5075: { sex: 'M', birth_date: '01-01-1962' },
-    F5075: { sex: 'F', birth_date: '01-01-1962' }
-  };
-
-  function demoPayload() {
-    const demographics = cohorts[cohort.value];
-    return [{
-      patient_id: 99900001,
-      birth_date: demographics.birth_date,
-      sex: demographics.sex,
-      DX_record: [
-        { date: '02-12-2022', code: 'J06.9' },
-        { date: '03-10-2023', code: 'Z00.00' },
-        { date: '04-20-2024', code: 'E78.5' },
-        { date: '08-06-2025', code: 'M54.50' }
-      ],
-      RX_record: [
-        { date: '05-11-2024', code: '61168010101' },
-        { date: '08-07-2025', code: '00071439703' }
-      ],
-      PROC_record: [
-        { date: '04-20-2024', code: '80061' },
-        { date: '08-06-2025', code: '99213' }
-      ]
-    }];
-  }
-
-  function updatePreview() {
-    payloadPreview.textContent = JSON.stringify(demoPayload(), null, 2);
-  }
-  cohort.addEventListener('change', updatePreview);
-  updatePreview();
-
-  go.addEventListener('click', async () => {
-    const token = key.value.trim();
-    if (!token) {
-      status.textContent = 'Enter the API key documented in the repository README before submitting.';
-      key.focus();
-      return;
-    }
-    go.disabled = true;
-    go.textContent = 'Calling API…';
-    status.textContent = 'Submitting the fabricated patient record to the ZeBRA endpoint…';
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000);
-    try {
-      const url = endpoint + '?target=' + encodeURIComponent(cohort.value) + '&api_key=' + encodeURIComponent(token);
-      const result = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(demoPayload()),
-        signal: controller.signal
-      });
-      const raw = await result.text();
-      let parsed;
-      try { parsed = JSON.parse(raw); } catch (_) { parsed = { raw_response: raw.slice(0, 2000) }; }
-      label.textContent = 'Actual API response · ' + cohort.value + ' · HTTP ' + result.status;
-      response.textContent = JSON.stringify(parsed, null, 2);
-      status.textContent = result.ok
-        ? 'The endpoint responded successfully. These are live results for the fabricated demo record.'
-        : 'The endpoint returned HTTP ' + result.status + '. Inspect error_code or response details.';
-    } catch (error) {
-      label.textContent = 'Live API request unsuccessful';
-      response.textContent = 'No new result was returned. The README example is not a response to this request.';
-      status.textContent = error.name === 'AbortError'
-        ? 'The request timed out. Try the README curl example from a terminal.'
-        : 'The browser could not complete the request (network or CORS restriction). Use the README curl command from a terminal.';
-    } finally {
-      clearTimeout(timeout);
-      go.disabled = false;
-      go.textContent = 'Run live inference ↗';
-    }
-  });
 })();
 </script>
 
