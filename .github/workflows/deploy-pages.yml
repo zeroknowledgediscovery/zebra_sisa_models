@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - index.html
+      - 'assets/**'
       - .github/workflows/deploy-pages.yml
   workflow_dispatch:
 
@@ -28,6 +29,8 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html _site/index.html
+          cp -R assets _site/assets
+          test -s _site/assets/zebra_signal_lambda_or_volcano.png
           touch _site/.nojekyll
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
