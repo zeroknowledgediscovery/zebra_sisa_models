@@ -218,7 +218,16 @@ const README_EXAMPLE = [{
 }];
 
 // inside the briefing deck the slide already supplies the title
-if (window.self !== window.top) document.body.classList.add("embedded");
+if (window.self !== window.top) {
+  document.body.classList.add("embedded");
+  // keep the deck's arrow / page keys working after a click inside the frame
+  const NAV = ["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","PageUp","PageDown"];
+  document.addEventListener("keydown", e => {
+    if (!NAV.includes(e.key) || e.metaKey || e.ctrlKey || e.altKey || e.target.closest("input,textarea,select,[contenteditable]")) return;
+    e.preventDefault();
+    window.parent.postMessage({ type: "zebra-deck-key", key: e.key, shiftKey: e.shiftKey }, location.origin);
+  });
+}
 
 /* ---------- theme ---------- */
 (function(){
